@@ -111,7 +111,7 @@ public class DefaultResourceCleanerTest {
 
     @Test
     public void testUnexpectedVolume() {
-        List<Offer> offers = OfferTestUtils.getOffers(UNEXPECTED_RESOURCE_1);
+        List<Offer> offers = OfferTestUtils.getCompleteOffers(UNEXPECTED_RESOURCE_1);
 
         for (ResourceCleaner cleaner : allCleaners) {
             List<OfferRecommendation> recommendations = cleaner.evaluate(offers);
@@ -128,7 +128,7 @@ public class DefaultResourceCleanerTest {
 
     @Test
     public void testUnexpectedResource() {
-        List<Offer> offers = OfferTestUtils.getOffers(UNEXPECTED_RESOURCE_2);
+        List<Offer> offers = OfferTestUtils.getCompleteOffers(UNEXPECTED_RESOURCE_2);
 
         for (ResourceCleaner cleaner : allCleaners) {
             List<OfferRecommendation> recommendations = cleaner.evaluate(offers);
@@ -285,7 +285,7 @@ public class DefaultResourceCleanerTest {
 
     @Test
     public void testPopulatedCleanersAllExpected() {
-        List<Offer> offers = OfferTestUtils.getOffers(Arrays.asList(EXPECTED_RESOURCE_1, EXPECTED_RESOURCE_2));
+        List<Offer> offers = OfferTestUtils.getCompleteOffers(Arrays.asList(EXPECTED_RESOURCE_1, EXPECTED_RESOURCE_2));
 
         // these cleaners have expected resources populated, so they are omitted from the response:
         for (ResourceCleaner cleaner : populatedCleaners) {
@@ -302,7 +302,7 @@ public class DefaultResourceCleanerTest {
         when(mockStateStore.fetchTasks()).thenReturn(Arrays.asList(failedTask, TASK_INFO_2));
         ResourceCleaner cleaner = new DefaultResourceCleaner(mockStateStore);
 
-        List<Offer> offers = OfferTestUtils.getOffers(EXPECTED_RESOURCE_1);
+        List<Offer> offers = OfferTestUtils.getCompleteOffers(EXPECTED_RESOURCE_1);
         List<OfferRecommendation> recommendations = cleaner.evaluate(offers);
         assertEquals("Got: " + recommendations, 1, recommendations.size());
         assertEquals(Operation.Type.UNRESERVE, recommendations.get(0).getOperation().getType());
@@ -313,7 +313,7 @@ public class DefaultResourceCleanerTest {
         TaskInfo failedTask = FailureUtils.markFailed(TASK_INFO_2);
         when(mockStateStore.fetchTasks()).thenReturn(Arrays.asList(TASK_INFO_1, failedTask));
         ResourceCleaner cleaner = new DefaultResourceCleaner(mockStateStore);
-        List<Offer> offers = OfferTestUtils.getOffers(EXPECTED_RESOURCE_2);
+        List<Offer> offers = OfferTestUtils.getCompleteOffers(EXPECTED_RESOURCE_2);
         List<OfferRecommendation> recommendations = cleaner.evaluate(offers);
 
         assertEquals("Got: " + recommendations, 2, recommendations.size());

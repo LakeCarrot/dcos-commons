@@ -63,7 +63,7 @@ public class RoundRobinByAttributeRuleTest {
                         .setScalar(Protos.Value.Scalar.newBuilder().setValue(1.0))
                         .build())
                 .build();
-        Offer.Builder offerBuilder = OfferTestUtils.getOffer(resource).toBuilder();
+        Offer.Builder offerBuilder = OfferTestUtils.getCompleteOffer(resource).toBuilder();
         offerBuilder.addAttributesBuilder()
                 .setName(name)
                 .setType(Value.Type.TEXT)

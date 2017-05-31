@@ -23,7 +23,7 @@ public class VolumeEvaluationStageTest {
     @Test
     public void testCreateSucceeds() throws Exception {
         Protos.Resource offeredResource = ResourceTestUtils.getUnreservedMountVolume(2000);
-        Protos.Offer offer = OfferTestUtils.getOffer(offeredResource);
+        Protos.Offer offer = OfferTestUtils.getCompleteOffer(offeredResource);
 
         MesosResourcePool mesosResourcePool = new MesosResourcePool(offer, Optional.of(Constants.ANY_ROLE));
         PodInstanceRequirement podInstanceRequirement =
@@ -42,7 +42,8 @@ public class VolumeEvaluationStageTest {
                                 TestConstants.SERVICE_NAME,
                                 UUID.randomUUID(),
                                 OfferRequirementTestUtils.getTestSchedulerFlags(),
-                                Collections.emptyList()));
+                                Collections.emptyList(),
+                                TestConstants.FRAMEWORK_ID));
         Assert.assertTrue(outcome.isPassing());
 
         List<OfferRecommendation> recommendations = new ArrayList<>(outcome.getOfferRecommendations());
@@ -74,7 +75,7 @@ public class VolumeEvaluationStageTest {
     @Test
     public void testCreateFails() throws Exception {
         Protos.Resource offeredResource = ResourceTestUtils.getUnreservedMountVolume(1000);
-        Protos.Offer offer = OfferTestUtils.getOffer(offeredResource);
+        Protos.Offer offer = OfferTestUtils.getCompleteOffer(offeredResource);
 
         MesosResourcePool mesosResourcePool = new MesosResourcePool(offer, Optional.of(Constants.ANY_ROLE));
         PodInstanceRequirement podInstanceRequirement =
@@ -93,7 +94,8 @@ public class VolumeEvaluationStageTest {
                                 TestConstants.SERVICE_NAME,
                                 UUID.randomUUID(),
                                 OfferRequirementTestUtils.getTestSchedulerFlags(),
-                                Collections.emptyList()));
+                                Collections.emptyList(),
+                                TestConstants.FRAMEWORK_ID));
         Assert.assertFalse(outcome.isPassing());
         Assert.assertEquals(0, outcome.getOfferRecommendations().size());
     }

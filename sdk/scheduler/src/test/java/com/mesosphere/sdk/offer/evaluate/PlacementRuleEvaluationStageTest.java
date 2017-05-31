@@ -52,11 +52,13 @@ public class PlacementRuleEvaluationStageTest {
                         TestConstants.SERVICE_NAME,
                         UUID.randomUUID(),
                         OfferRequirementTestUtils.getTestSchedulerFlags(),
-                        Collections.emptyList()));
+                        Collections.emptyList(),
+                        TestConstants.FRAMEWORK_ID));
         Assert.assertTrue(outcome.isPassing());
 
-        Assert.assertEquals(1, mesosResourcePool.getUnreservedMergedPool().size());
-        Assert.assertTrue(mesosResourcePool.getUnreservedMergedPool().get("cpus").getScalar().getValue() == 1.0);
+        Assert.assertEquals(3, mesosResourcePool.getUnreservedMergedPool().size());
+        Assert.assertTrue(
+                Math.abs(mesosResourcePool.getUnreservedMergedPool().get("cpus").getScalar().getValue() - 1.1) < 0.01);
     }
 
     @Test
@@ -85,15 +87,17 @@ public class PlacementRuleEvaluationStageTest {
                         TestConstants.SERVICE_NAME,
                         UUID.randomUUID(),
                         OfferRequirementTestUtils.getTestSchedulerFlags(),
-                        Collections.emptyList()));
+                        Collections.emptyList(),
+                        TestConstants.FRAMEWORK_ID));
 
         Assert.assertFalse(outcome.isPassing());
-        Assert.assertEquals(1, mesosResourcePool.getUnreservedMergedPool().size());
-        Assert.assertTrue(mesosResourcePool.getUnreservedMergedPool().get("cpus").getScalar().getValue() == 1.0);
+        Assert.assertEquals(3, mesosResourcePool.getUnreservedMergedPool().size());
+        Assert.assertTrue(
+                Math.abs(mesosResourcePool.getUnreservedMergedPool().get("cpus").getScalar().getValue() - 1.1) < 0.01);
     }
 
     private static Protos.Offer offerWithAgent(String agentId, Protos.Resource resource) {
-        Protos.Offer.Builder o = OfferTestUtils.getOffer(resource).toBuilder();
+        Protos.Offer.Builder o = OfferTestUtils.getCompleteOffer(resource).toBuilder();
         o.getSlaveIdBuilder().setValue(agentId);
 
         return o.build();

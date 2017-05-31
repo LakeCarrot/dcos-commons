@@ -15,14 +15,15 @@ public class MesosResourcePoolTest {
 
     @Test
     public void testEmptyUnreservedAtomicPool() {
-        Offer offer = OfferTestUtils.getOffer(ResourceTestUtils.getUnreservedCpu(1.0));
+        Offer offer = OfferTestUtils.getCompleteOffer(ResourceTestUtils.getUnreservedCpu(1.0));
         MesosResourcePool pool = new MesosResourcePool(offer, Optional.of(Constants.ANY_ROLE));
+
         Assert.assertEquals(0, pool.getUnreservedAtomicPool().size());
     }
 
     @Test
     public void testCreateSingleUnreservedAtomicPool() {
-        Offer offer = OfferTestUtils.getOffer(ResourceTestUtils.getUnreservedMountVolume(1000));
+        Offer offer = OfferTestUtils.getCompleteOffer(ResourceTestUtils.getUnreservedMountVolume(1000));
         MesosResourcePool pool = new MesosResourcePool(offer, Optional.of(Constants.ANY_ROLE));
 
         Assert.assertEquals(1, pool.getUnreservedAtomicPool().size());
@@ -32,7 +33,7 @@ public class MesosResourcePoolTest {
     @Test
     public void testCreateSingleReservedAtomicPool() {
         Resource resource = ResourceTestUtils.getExpectedMountVolume(1000);
-        Offer offer = OfferTestUtils.getOffer(resource);
+        Offer offer = OfferTestUtils.getCompleteOffer(resource);
         MesosResourcePool pool = new MesosResourcePool(offer, Optional.of(Constants.ANY_ROLE));
         String resourceId = new MesosResource(resource).getResourceId().get();
 
@@ -44,7 +45,7 @@ public class MesosResourcePoolTest {
     @Test
     public void testMultipleUnreservedAtomicPool() {
         Resource resource = ResourceTestUtils.getUnreservedMountVolume(1000);
-        Offer offer = OfferTestUtils.getOffer(Arrays.asList(resource, resource));
+        Offer offer = OfferTestUtils.getCompleteOffer(Arrays.asList(resource, resource));
         MesosResourcePool pool = new MesosResourcePool(offer, Optional.of(Constants.ANY_ROLE));
 
         Assert.assertEquals(1, pool.getUnreservedAtomicPool().size());
@@ -55,7 +56,7 @@ public class MesosResourcePoolTest {
     public void testConsumeUnreservedAtomicResource() {
         Resource offerResource = ResourceTestUtils.getUnreservedMountVolume(1000);
         Protos.Value resourceValue = ValueUtils.getValue(offerResource);
-        Offer offer = OfferTestUtils.getOffer(offerResource);
+        Offer offer = OfferTestUtils.getCompleteOffer(offerResource);
         MesosResourcePool pool = new MesosResourcePool(offer, Optional.of(Constants.ANY_ROLE));
 
         Assert.assertEquals(1, pool.getUnreservedAtomicPool().size());
@@ -69,7 +70,7 @@ public class MesosResourcePoolTest {
         Resource resource = ResourceTestUtils.getExpectedCpu(1.0);
         Protos.Value resourceValue = ValueUtils.getValue(resource);
         String resourceId = ResourceTestUtils.getResourceId(resource);
-        Offer offer = OfferTestUtils.getOffer(resource);
+        Offer offer = OfferTestUtils.getCompleteOffer(resource);
         MesosResourcePool pool = new MesosResourcePool(offer, Optional.of(Constants.ANY_ROLE));
 
         Assert.assertEquals(1, pool.getDynamicallyReservedPoolByResourceId().size());
@@ -99,7 +100,7 @@ public class MesosResourcePoolTest {
         Resource desiredUnreservedResource = ResourceTestUtils.getUnreservedCpu(2.0);
         Protos.Value resourceValue = ValueUtils.getValue(desiredUnreservedResource);
         Resource offeredUnreservedResource = ResourceTestUtils.getUnreservedScalar("cpus", 1.0);
-        Offer offer = OfferTestUtils.getOffer(offeredUnreservedResource);
+        Offer offer = OfferTestUtils.getCompleteOffer(offeredUnreservedResource);
         MesosResourcePool pool = new MesosResourcePool(offer, Optional.of(Constants.ANY_ROLE));
 
         Assert.assertFalse(

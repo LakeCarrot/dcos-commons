@@ -26,7 +26,7 @@ public class NamedVIPEvaluationStageTest {
     @Test
     public void testDiscoveryInfoPopulated() throws Exception {
         Protos.Resource offeredPorts = ResourceTestUtils.getUnreservedPorts(10000, 10000);
-        Protos.Offer offer = OfferTestUtils.getOffer(offeredPorts);
+        Protos.Offer offer = OfferTestUtils.getCompleteOffer(offeredPorts);
 
         boolean onOverlay = false;
         PodInfoBuilder podInfoBuilder = getPodInfoBuilder(10000, Collections.emptyList(), onOverlay);
@@ -137,7 +137,7 @@ public class NamedVIPEvaluationStageTest {
     public void testVIPIsReused() throws InvalidRequirementException {
         String resourceId = UUID.randomUUID().toString();
         Protos.Resource offeredResource = ResourceTestUtils.getExpectedRanges("ports", 10000, 10000, resourceId);
-        Protos.Offer offer = OfferTestUtils.getOffer(offeredResource);
+        Protos.Offer offer = OfferTestUtils.getCompleteOffer(offeredResource);
 
         boolean onOverlay = false;
         String vipLabelKey = "VIP_LABEL_KEY";
@@ -173,7 +173,7 @@ public class NamedVIPEvaluationStageTest {
     @Test
     public void testPortNumberIsUpdated() throws InvalidRequirementException {
         Protos.Resource offeredResource = ResourceTestUtils.getUnreservedPorts(8000, 8000);
-        Protos.Offer offer = OfferTestUtils.getOffer(offeredResource);
+        Protos.Offer offer = OfferTestUtils.getCompleteOffer(offeredResource);
 
         String vipLabelKey = "VIP_LABEL_KEY";
         boolean onOverlay = false;
@@ -274,6 +274,7 @@ public class NamedVIPEvaluationStageTest {
                 TestConstants.SERVICE_NAME,
                 UUID.randomUUID(),
                 OfferRequirementTestUtils.getTestSchedulerFlags(),
-                taskInfos);
+                taskInfos,
+                TestConstants.FRAMEWORK_ID);
     }
 }

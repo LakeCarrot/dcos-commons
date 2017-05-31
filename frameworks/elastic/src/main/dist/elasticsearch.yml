@@ -5,11 +5,11 @@ discovery.zen.ping.unicast.hosts:
 discovery.zen.minimum_master_nodes: 2
 #TODO: LIBPROCESS_IP is wrong when overlay network is enabled
 network.bind_host:
-  - {{LIBPROCESS_IP}}
+  - {{MESOS_CONTAINER_IP}}
   - _local_
 #TODO: LIBPROCESS_IP is wrong when overlay network is enabled
 network.publish_host:
-  - {{LIBPROCESS_IP}}
+  - {{MESOS_CONTAINER_IP}}
   - _local_
 cluster.name: {{FRAMEWORK_NAME}}
 node.name: {{TASK_NAME}}
