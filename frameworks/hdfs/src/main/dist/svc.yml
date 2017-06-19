@@ -109,6 +109,8 @@ pods:
             dest: {{HDFS_VERSION}}/etc/hadoop/ssl-server.xml
           {{/TLS_ENABLED}}
         env:
+          HADOOP_OPTS: -Dsun.security.krb5.debug=true
+          HADOOP_JAAS_DEBUG: true
           FRAMEWORK_NAME: {{SERVICE_NAME}}
           NAMENODE: true
       format:
@@ -157,6 +159,8 @@ pods:
             dest: {{HDFS_VERSION}}/etc/hadoop/ssl-server.xml
           {{/TLS_ENABLED}}
         env:
+          HADOOP_OPTS: "-Dsun.security.krb5.debug=true"
+          HADOOP_JAAS_DEBUG: true
           FRAMEWORK_NAME: {{SERVICE_NAME}}
           NAMENODE: true
       zkfc:
