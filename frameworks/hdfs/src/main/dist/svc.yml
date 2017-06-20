@@ -59,6 +59,10 @@ pods:
     networks:
       dcos:
     {{/ENABLE_VIRTUAL_NETWORK}}
+    volume:
+      path: name-data
+      size: {{NAME_DISK}}
+      type: {{NAME_DISK_TYPE}}
     resource-sets:
       name-resources:
         cpus: {{NAME_CPUS}}
@@ -68,10 +72,6 @@ pods:
             port: {{TASKCFG_ALL_NAME_NODE_RPC_PORT}}
           name-http:
             port: {{TASKCFG_ALL_NAME_NODE_HTTP_PORT}}
-        volume:
-          path: name-data
-          size: {{NAME_DISK}}
-          type: {{NAME_DISK_TYPE}}
       zkfc-resources:
         cpus: {{ZKFC_CPUS}}
         memory: {{ZKFC_MEM}}
