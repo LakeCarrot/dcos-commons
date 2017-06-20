@@ -504,7 +504,7 @@ func (suite *PlanTestSuite) TestPrintStatusRaw() {
 	printStatus("deploy", true)
 
 	// assert CLI output matches response json
-	assert.Equal(suite.T(), string(suite.responseBody)+"\n\n", suite.capturedOutput.String())
+	assert.Equal(suite.T(), string(suite.responseBody)+"\n", suite.capturedOutput.String())
 }
 
 func (suite *PlanTestSuite) TestPrintStatusTree() {

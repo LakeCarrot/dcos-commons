@@ -133,12 +133,16 @@ func restart(planName, phase, step string) {
 		// TODO: the user doesn't always have to specify this down to plan level so we should output different messages
 		if step == "" && phase == "" {
 			client.PrintMessage("Plan %s has been restarted.", planName)
+		} else if step == "" {
+			client.PrintMessage("Phase %s in plan %s has been restarted.", phase, planName)
 		} else {
 			client.PrintMessage("Step %s in phase %s in plan %s has been restarted.", step, phase, planName)
 		}
 	} else {
 		if step == "" && phase == "" {
 			client.PrintMessage("Plan %s could not be restarted.", planName)
+		} else if step == "" {
+			client.PrintMessage("Phase %s in plan %s could not be restarted.", phase, planName)
 		} else {
 			client.PrintMessage("Step %s in phase %s in plan %s could not be restarted.", step, phase, planName)
 		}
