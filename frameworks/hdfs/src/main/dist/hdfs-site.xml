@@ -26,7 +26,7 @@
     <!-- namenode -->
     <property>
         <name>dfs.namenode.shared.edits.dir</name>
-        <value>qjournal://journal-0-node.{{FRAMEWORK_NAME}}.autoip.dcos.thisdcos.directory:{{JOURNAL_NODE_RPC_PORT}};journal-1-node.{{FRAMEWORK_NAME}}.autoip.dcos.thisdcos.directory:{{JOURNAL_NODE_RPC_PORT}};journal-2-node.{{FRAMEWORK_NAME}}.autoip.dcos.thisdcos.directory:{{JOURNAL_NODE_RPC_PORT}}/hdfs</value>
+        <value>qjournal://journal-0-node.{{FRAMEWORK_NAME}}.mesos:{{JOURNAL_NODE_RPC_PORT}};journal-1-node.{{FRAMEWORK_NAME}}.mesos:{{JOURNAL_NODE_RPC_PORT}};journal-2-node.{{FRAMEWORK_NAME}}.mesos:{{JOURNAL_NODE_RPC_PORT}}/hdfs</value>
     </property>
     <property>
         <name>dfs.namenode.name.dir</name>
@@ -61,7 +61,7 @@
     <!-- name-0-node -->
     <property>
         <name>dfs.namenode.rpc-address.hdfs.name-0-node</name>
-        <value>name-0-node.{{FRAMEWORK_NAME}}.autoip.dcos.thisdcos.directory:{{NAME_NODE_RPC_PORT}}</value>
+        <value>name-0-node.{{FRAMEWORK_NAME}}.mesos:{{NAME_NODE_RPC_PORT}}</value>
     </property>
     <property>
         <name>dfs.namenode.rpc-bind-host.hdfs.name-0-node</name>
@@ -69,7 +69,7 @@
     </property>
     <property>
         <name>dfs.namenode.http-address.hdfs.name-0-node</name>
-        <value>name-0-node.{{FRAMEWORK_NAME}}.autoip.dcos.thisdcos.directory:{{NAME_NODE_HTTP_PORT}}</value>
+        <value>name-0-node.{{FRAMEWORK_NAME}}.mesos:{{NAME_NODE_HTTP_PORT}}</value>
     </property>
     <property>
         <name>dfs.namenode.http-bind-host.hdfs.name-0-node</name>
@@ -80,7 +80,7 @@
     <!-- name-1-node -->
     <property>
         <name>dfs.namenode.rpc-address.hdfs.name-1-node</name>
-        <value>name-1-node.{{FRAMEWORK_NAME}}.autoip.dcos.thisdcos.directory:{{NAME_NODE_RPC_PORT}}</value>
+        <value>name-1-node.{{FRAMEWORK_NAME}}.mesos:{{NAME_NODE_RPC_PORT}}</value>
     </property>
     <property>
         <name>dfs.namenode.rpc-bind-host.hdfs.name-1-node</name>
@@ -88,7 +88,7 @@
     </property>
     <property>
         <name>dfs.namenode.http-address.hdfs.name-1-node</name>
-        <value>name-1-node.{{FRAMEWORK_NAME}}.autoip.dcos.thisdcos.directory:{{NAME_NODE_HTTP_PORT}}</value>
+        <value>name-1-node.{{FRAMEWORK_NAME}}.mesos:{{NAME_NODE_HTTP_PORT}}</value>
     </property>
     <property>
         <name>dfs.namenode.http-bind-host.hdfs.name-1-node</name>
@@ -225,16 +225,12 @@
             <value>{{KERBEROS_PRIMARY}}/*@{{KERBEROS_REALM}}</value>
         </property>
         <property>
-            <name>dfs.cluster.administrators</name>
-            <value>core,root,hdfs,nobody</value>
-        </property>
-        <property>
             <name>dfs.web.authentication.kerberos.principal</name>
-            <value>{{KERBEROS_PRIMARY}}/{{TASK_NAME}}.{{FRAMEWORK_NAME}}.mesos@{{KERBEROS_REALM}}</value>
+            <value>{{KERBEROS_PRIMARY}}/{{TASK_NAME}}.hdfs.mesos@{{KERBEROS_REALM}}</value>
         </property>
         <property>
             <name>dfs.web.authentication.kerberos.keytab</name>
-            <value>keytabs/{{KERBEROS_PRIMARY}}.{{TASK_NAME}}.{{FRAMEWORK_NAME}}.mesos.keytab</value>
+            <value>keytabs/{{KERBEROS_PRIMARY}}.{{TASK_NAME}}.hdfs.mesos.keytab</value>
         </property>
 
 
@@ -242,11 +238,11 @@
         <!-- DataNode Security Configuration -->
         <property>
             <name>dfs.datanode.keytab.file</name>
-            <value>keytabs/{{KERBEROS_PRIMARY}}.data-{{POD_INSTANCE_INDEX}}-node.{{FRAMEWORK_NAME}}.mesos.keytab</value>
+            <value>keytabs/{{KERBEROS_PRIMARY}}.data-{{POD_INSTANCE_INDEX}}-node.hdfs.mesos.keytab</value>
         </property>
         <property>
             <name>dfs.datanode.kerberos.principal</name>
-            <value>{{KERBEROS_PRIMARY}}/data-{{POD_INSTANCE_INDEX}}-node.{{FRAMEWORK_NAME}}.mesos@{{KERBEROS_REALM}}</value>
+            <value>{{KERBEROS_PRIMARY}}/data-{{POD_INSTANCE_INDEX}}-node.hdfs.mesos@{{KERBEROS_REALM}}</value>
         </property>
         <property>
             <name>dfs.datanode.data.dir.perm</name>
@@ -258,15 +254,15 @@
         <!-- NameNode Security Configuration -->
         <property>
             <name>dfs.namenode.keytab.file</name>
-            <value>keytabs/{{KERBEROS_PRIMARY}}.name-{{POD_INSTANCE_INDEX}}-node.{{FRAMEWORK_NAME}}.mesos.keytab</value>
+            <value>keytabs/{{KERBEROS_PRIMARY}}.name-{{POD_INSTANCE_INDEX}}-node.hdfs.mesos.keytab</value>
         </property>
         <property>
             <name>dfs.namenode.kerberos.principal</name>
-            <value>{{KERBEROS_PRIMARY}}/name-{{POD_INSTANCE_INDEX}}-node.{{FRAMEWORK_NAME}}.mesos@{{KERBEROS_REALM}}</value>
+            <value>{{KERBEROS_PRIMARY}}/name-{{POD_INSTANCE_INDEX}}-node.hdfs.mesos@{{KERBEROS_REALM}}</value>
         </property>
         <property>
             <name>dfs.namenode.kerberos.internal.spnego.principal</name>
-            <value>{{KERBEROS_PRIMARY_HTTP}}/name-{{POD_INSTANCE_INDEX}}-node.{{FRAMEWORK_NAME}}.mesos@{{KERBEROS_REALM}}</value>
+            <value>{{KERBEROS_PRIMARY_HTTP}}/name-{{POD_INSTANCE_INDEX}}-node.hdfs.mesos@{{KERBEROS_REALM}}</value>
         </property>
         {{/NAMENODE}}
 
@@ -274,15 +270,15 @@
         <!-- NameNode Security Configuration -->
         <property>
             <name>dfs.namenode.keytab.file</name>
-            <value>keytabs/{{KERBEROS_PRIMARY}}.zkfc-{{POD_INSTANCE_INDEX}}-node.{{FRAMEWORK_NAME}}.mesos.keytab</value>
+            <value>keytabs/{{KERBEROS_PRIMARY}}.zkfc-{{POD_INSTANCE_INDEX}}-node.hdfs.mesos.keytab</value>
         </property>
         <property>
             <name>dfs.namenode.kerberos.principal</name>
-            <value>{{KERBEROS_PRIMARY}}/zkfc-{{POD_INSTANCE_INDEX}}-node.{{FRAMEWORK_NAME}}.mesos@{{KERBEROS_REALM}}</value>
+            <value>{{KERBEROS_PRIMARY}}/zkfc-{{POD_INSTANCE_INDEX}}-node.hdfs.mesos@{{KERBEROS_REALM}}</value>
         </property>
         <property>
             <name>dfs.namenode.kerberos.internal.spnego.principal</name>
-            <value>{{KERBEROS_PRIMARY_HTTP}}/zkfc-{{POD_INSTANCE_INDEX}}-node.{{FRAMEWORK_NAME}}.mesos@{{KERBEROS_REALM}}</value>
+            <value>{{KERBEROS_PRIMARY_HTTP}}/zkfc-{{POD_INSTANCE_INDEX}}-node.hdfs.mesos@{{KERBEROS_REALM}}</value>
         </property>
         {{/ZKFC}}
 
@@ -290,15 +286,15 @@
         <!-- JournalNode Security Configuration -->
         <property>
             <name>dfs.journalnode.keytab.file</name>
-            <value>keytabs/hdfs.journal-{{POD_INSTANCE_INDEX}}-node.{{FRAMEWORK_NAME}}.mesos.keytab</value>
+            <value>keytabs/hdfs.journal-{{POD_INSTANCE_INDEX}}-node.hdfs.mesos.keytab</value>
         </property>
         <property>
             <name>dfs.journalnode.kerberos.principal</name>
-            <value>{{KERBEROS_PRIMARY}}/journal-{{POD_INSTANCE_INDEX}}-node.{{FRAMEWORK_NAME}}.mesos@{{KERBEROS_REALM}}</value>
+            <value>{{KERBEROS_PRIMARY}}/journal-{{POD_INSTANCE_INDEX}}-node.hdfs.mesos@{{KERBEROS_REALM}}</value>
         </property>
         <property>
             <name>dfs.journalnode.kerberos.internal.spnego.principal</name>
-            <value>{{KERBEROS_PRIMARY_HTTP}}/journal-{{POD_INSTANCE_INDEX}}-node.{{FRAMEWORK_NAME}}.mesos@{{KERBEROS_REALM}}</value>
+            <value>{{KERBEROS_PRIMARY_HTTP}}/journal-{{POD_INSTANCE_INDEX}}-node.hdfs.mesos@{{KERBEROS_REALM}}</value>
         </property>
         {{/JOURNALNODE}}
     {{/SECURE_MODE}}
