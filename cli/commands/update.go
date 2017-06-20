@@ -232,25 +232,19 @@ func HandleUpdateSection(app *kingpin.Application) {
 	planCmd := &planHandler{}
 
 	forceComplete := update.Command("force-complete", "Force complete a specific step in the provided phase").Alias("force").Action(planCmd.handleUpdateForceComplete)
-	// TODO: it'd be nice if this was optional (but there is no way to make this optional and have required arguments after it).
-	forceComplete.Arg("plan", "Name of the plan to force complete").Required().StringVar(&planCmd.PlanName)
 	forceComplete.Arg("phase", "Name or UUID of the phase containing the provided step").Required().StringVar(&planCmd.Phase)
 	forceComplete.Arg("step", "Name or UUID of step to be restarted").Required().StringVar(&planCmd.Step)
 
-	forceRestart := update.Command("force-restart", "Restart a deploy plan, or specific step in the provided phase").Alias("restart").Action(planCmd.handleUpdateForceRestart)
-	forceRestart.Arg("plan", "Name of the plan to restart").StringVar(&planCmd.PlanName)
+	forceRestart := update.Command("force-restart", "Restart update plan, or specific step in the provided phase").Alias("restart").Action(planCmd.handleUpdateForceRestart)
 	forceRestart.Arg("phase", "Name or UUID of the phase containing the provided step").StringVar(&planCmd.Phase)
 	forceRestart.Arg("step", "Name or UUID of step to be restarted").StringVar(&planCmd.Step)
 
 	update.Command("package-versions", "View a list of available package versions to downgrade or upgrade to").Action(cmd.ViewPackageVersions)
 
-	pause := update.Command("pause", "Pause the deploy plan, or the plan with the provided name, or a specific phase in that plan with the provided name or UUID").Alias("interrupt").Action(planCmd.handleUpdatePause)
-	pause.Arg("plan", "Name of the plan to pause").StringVar(&planCmd.PlanName)
+	update.Command("pause", "Pause update plan, or the plan with the provided name, or a specific phase in that plan with the provided name or UUID").Alias("interrupt").Action(planCmd.handleUpdatePause)
 
-	resume := update.Command("resume", "Resume the deploy plan, or the plan with the provided name, or a specific phase in that plan with the provided name or UUID").Alias("continue").Action(planCmd.handleUpdateResume)
-	resume.Arg("plan", "Name of the plan to resume").StringVar(&planCmd.PlanName)
+	update.Command("resume", "Resume update plan, or the plan with the provided name, or a specific phase in that plan with the provided name or UUID").Alias("continue").Action(planCmd.handleUpdateResume)
 
 	status := update.Command("status", "View status of a running update").Alias("show").Action(planCmd.handleUpdateStatus)
-	status.Arg("plan", "Name of the plan to show").StringVar(&planCmd.PlanName)
 	status.Flag("json", "Show raw JSON response instead of user-friendly tree").BoolVar(&planCmd.RawJSON)
 }
