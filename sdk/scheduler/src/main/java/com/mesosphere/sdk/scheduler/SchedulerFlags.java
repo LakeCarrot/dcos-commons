@@ -1,6 +1,7 @@
 package com.mesosphere.sdk.scheduler;
 
 import org.apache.mesos.Protos.Credential;
+import org.json.JSONObject;
 
 import java.time.Duration;
 import java.util.Map;
@@ -152,6 +153,19 @@ public class SchedulerFlags {
      */
     public boolean isSideChannelActive() {
         return flagStore.isPresent(SIDECHANNEL_AUTH_ENV_NAME);
+    }
+
+    public String getServiceAccountUid() {
+        return getServiceAccountObject().getString("uid");
+    }
+
+    public String getServiceAccountPrivateKeyPEM() {
+        return getServiceAccountObject().getString("private_key");
+    }
+
+    // TODO(mh): Add documentation about this JSON varaible being injected to scheduler runtime
+    private JSONObject getServiceAccountObject() {
+        return new JSONObject(flagStore.getRequired(SIDECHANNEL_AUTH_ENV_NAME));
     }
 
     /**

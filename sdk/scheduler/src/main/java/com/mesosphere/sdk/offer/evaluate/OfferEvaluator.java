@@ -13,6 +13,7 @@ import org.apache.mesos.Protos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.security.spec.InvalidKeySpecException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -158,9 +159,10 @@ public class OfferEvaluator {
 
         evaluationPipeline.add(new ExecutorEvaluationStage(getExecutorInfo(thisPodTasks.values())));
         if (shouldGetNewRequirement) {
-            evaluationPipeline.addAll(getNewEvaluationPipeline(podInstanceRequirement, allTasks));
+            evaluationPipeline.addAll(getNewEvaluationPipeline(serviceName, podInstanceRequirement, allTasks));
         } else {
             evaluationPipeline.addAll(
+                    // TODO(mh): Add TLS for existing pipelines
                     getExistingEvaluationPipeline(podInstanceRequirement, thisPodTasks, allTasks, executorInfo.get()));
         }
 
@@ -235,6 +237,7 @@ public class OfferEvaluator {
     }
 
     private static List<OfferEvaluationStage> getNewEvaluationPipeline(
+            String serviceName,
             PodInstanceRequirement podInstanceRequirement,
             Collection<Protos.TaskInfo> allTasks) {
         Map<String, ResourceSet> resourceSets = getNewResourceSets(podInstanceRequirement);
@@ -267,6 +270,13 @@ public class OfferEvaluator {
             for (VolumeSpec volumeSpec : entry.getValue().getVolumes()) {
                 evaluationStages.add(
                         new VolumeEvaluationStage(volumeSpec, taskName, Optional.empty(), Optional.empty()));
+            }
+
+            // TODO(mh): Improve error handling
+            try {
+                evaluationStages.add(TLSEvaluationStage.fromEnvironmentForService(serviceName));
+            } catch (InvalidKeySpecException e) {
+                e.printStackTrace();
             }
 
             boolean shouldBeLaunched = podInstanceRequirement.getTasksToLaunch().contains(taskName);
