@@ -139,7 +139,7 @@ def test_increase_count():
 
     tasks.check_running(SERVICE_NAME, DEFAULT_BROKER_COUNT)
 
-    pl = service_cli('plan show --json {}'.format(DEFAULT_PLAN_NAME))
+    pl = service_cli('plan show --json '{}'.format(DEFAULT_PLAN_NAME))
     assert pl['status'] == 'WAITING'
     assert pl['phases'][0]['status'] == 'WAITING'
 
@@ -148,7 +148,7 @@ def test_increase_count():
 
     assert pl['phases'][0]['steps'][DEFAULT_BROKER_COUNT]['status'] == 'WAITING'
 
-    service_cli('plan continue {} {}'.format(DEFAULT_PLAN_NAME, DEFAULT_PHASE_NAME))
+    service_cli('plan continue {} {}'.format(DEFAULT_PLAN_NAME, DEFAULT_PHASE_NAME), get_json=False)
 
     tasks.check_running(SERVICE_NAME, DEFAULT_BROKER_COUNT + 1)
 
@@ -201,7 +201,7 @@ def test_increase_cpu():
 
     broker_ids = tasks.get_task_ids(SERVICE_NAME, '{}-0-{}'.format(DEFAULT_POD_TYPE, DEFAULT_TASK_NAME))
 
-    service_cli('plan continue {} {}'.format(DEFAULT_PLAN_NAME, DEFAULT_PHASE_NAME))
+    service_cli('plan continue {} {}'.format(DEFAULT_PLAN_NAME, DEFAULT_PHASE_NAME), get_json=False)
 
     tasks.check_tasks_updated(SERVICE_NAME, '{}-0-{}'.format(DEFAULT_POD_TYPE, DEFAULT_TASK_NAME), broker_ids)
 
