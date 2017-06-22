@@ -1,12 +1,14 @@
 package com.mesosphere.sdk.dcos.auth;
 
 
+import org.bouncycastle.util.io.pem.PemReader;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -30,28 +32,22 @@ public class ServiceAccountIAMTokenProviderTest {
     }
 
     private KeyPair loadRSAKeyPair() throws IOException, InvalidKeySpecException {
+
         ClassLoader classLoader = getClass().getClassLoader();
 
         File privateKeyFile = new File(classLoader.getResource("rsa-private-key.pem").getFile());
         File publicKeyFile = new File(classLoader.getResource("rsa-public-key.pem").getFile());
 
-        String privateKeyStr = new String(Files.readAllBytes(Paths.get(privateKeyFile.getPath())))
-                .replaceAll("-----BEGIN (.* )?PRIVATE KEY-----\n", "")
-                .replaceAll("-----END (.* )?PRIVATE KEY-----\n?", "")
-                .replaceAll("\n", "");
-        byte[] privateKeyBytes  = Base64.getDecoder().decode(privateKeyStr);
-        PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(privateKeyBytes);
-        PrivateKey privateKey = KEY_FACTORY.generatePrivate(spec);
+        PemReader pemReader = new PemReader(new FileReader(privateKeyFile));
+        PrivateKey privateKey = KEY_FACTORY.generatePrivate(
+                new PKCS8EncodedKeySpec(pemReader.readPemObject().getContent()));
 
-        String publicKeyStr = new String(Files.readAllBytes(Paths.get(publicKeyFile.getPath())))
-                .replaceAll("-----BEGIN (.* )?PUBLIC KEY-----\n", "")
-                .replaceAll("-----END (.* )?PUBLIC KEY-----\n?", "")
-                .replaceAll("\n", "");
-        byte[] publicKeyBytes = Base64.getDecoder().decode(publicKeyStr);
-        X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(publicKeyBytes);
-        PublicKey publicKey = KEY_FACTORY.generatePublic(publicKeySpec);
+        pemReader = new PemReader(new FileReader(publicKeyFile));
+        PublicKey publicKey = KEY_FACTORY.generatePublic(
+                new X509EncodedKeySpec(pemReader.readPemObject().getContent()));
 
         return new KeyPair(publicKey, privateKey);
+
     }
 
     // Following tests expects DC/OS to be running on 172.17.0.2 IP address and its not ran by default.

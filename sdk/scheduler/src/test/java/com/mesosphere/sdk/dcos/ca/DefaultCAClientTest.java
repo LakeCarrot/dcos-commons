@@ -1,34 +1,37 @@
 package com.mesosphere.sdk.dcos.ca;
 
-import com.mesosphere.sdk.dcos.http.HttpClientBuilder;
 import com.mesosphere.sdk.dcos.auth.StaticTokenProvider;
+import com.mesosphere.sdk.dcos.http.HttpClientBuilder;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.fluent.Executor;
+import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
+import org.bouncycastle.asn1.x500.X500NameBuilder;
+import org.bouncycastle.asn1.x500.style.BCStyle;
+import org.bouncycastle.asn1.x509.*;
+import org.bouncycastle.openssl.jcajce.JcaMiscPEMGenerator;
+import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
+import org.bouncycastle.pkcs.PKCS10CertificationRequest;
+import org.bouncycastle.pkcs.PKCS10CertificationRequestBuilder;
+import org.bouncycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder;
+import org.bouncycastle.util.io.pem.PemWriter;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import sun.security.pkcs10.PKCS10;
-import sun.security.util.ObjectIdentifier;
-import sun.security.x509.DNSName;
-import sun.security.x509.ExtendedKeyUsageExtension;
-import sun.security.x509.KeyUsageExtension;
-import sun.security.x509.X500Name;
 
 import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
+import java.io.OutputStreamWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
-import java.util.Arrays;
-import java.util.Vector;
 
 public class DefaultCAClientTest {
 
-    private String TOKEN = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiJhZG1pbiIsImV4cCI6MTQ5ODMxMjQzOH0.A7qDzH6rzNuV3UP5TF8rsTNk2EhfOByhicv7IsBPPk_WhlO3FWP5wSPdsu8I_nGrP1-TVHqtJWlBqseXvai4_80DlJPNqrsWWkgYr8-OOpGMDEpll2AmjRyFEizxBI1xw8CZ12ZVM3NwlfCWe-yCmBfaFx0OmEZEANAvNP8RPDuqWHmfBFdcR7WHLhYpdMZ2iDtquy-dEcZuxYptJWn-8Pt1YzF4u7p82cILDKe6rCwZUso4DBnkRnjqL7ntlfXN_M8zjV9k65mbqmZXjejJZT7mJnnYoumrtPg46Kg85lHB-xhDrJp9_D7iMKSbxCaaw6Gk3q-puw0M-jQ-T_ASnA";
+    private String TOKEN = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiJhZG1pbiIsImV4cCI6MTQ5ODU1NjQ2Mn0.n7w8gDYUwEjSR6g-uk-Xk0SFuMjSEC4otVAdjn5i1rA4L7WFjy3G9n3e6dojSNXpm6kgLrRyUCWE1BcUfl0f-Zev49NGARbHgOMZjJSFoNly0W1Bo2QoeccuyqcKpqSZl4JNWeTyJRmc_r2lFzUcM67WwQMLNHA9eFdy6PkwPSSz1jpFpE3fu49sFkLdYA8v5PIxqQ3WExznpS5837qK8KQlfypo4xslwOvtF_nOhbduG4bLNu500IWIvT8_Ul3FdXVfR_t5FSnbe0M61rTy4IKik-lGTwMJQKjaMF248RxR-lhH6OrF6kmV0d8he9z9fFuZAPEC2wAJMS-3_FU7Bg";
 
     private KeyPairGenerator KEY_PAIR_GENERATOR;
     private int RSA_KEY_SIZE = 2048;
@@ -58,33 +61,49 @@ public class DefaultCAClientTest {
     public void testSign() throws Exception {
         DefaultCAClient client = new DefaultCAClient(CA_BASE_URL, createAuthenticatedExecutor());
 
-        KeyUsageExtension keyUsage = new KeyUsageExtension();
-        keyUsage.set(KeyUsageExtension.DIGITAL_SIGNATURE, true);
-
-        int[] serverAuthOidData = new int[]{1, 3, 6, 1, 5, 5, 7, 3, 1};
-        int[] clientAuthOidData = new int[]{1, 3, 6, 1, 5, 5, 7, 3, 2};
-        Vector<ObjectIdentifier> extendedKeyUsages = new Vector<>(Arrays.asList(
-                new ObjectIdentifier(clientAuthOidData),
-                new ObjectIdentifier(serverAuthOidData)
-        ));
-        ExtendedKeyUsageExtension extendedKeyUsage = new ExtendedKeyUsageExtension(
-                extendedKeyUsages);
-
         KeyPair keyPair = KEY_PAIR_GENERATOR.generateKeyPair();
 
-        PKCS10 csr = new CSRBuilder(keyPair.getPublic())
-                .addSubject(new X500Name("CN=martin"))
-                .addSubjectAlternativeName(new DNSName("test.com"))
-                .addExtension(KeyUsageExtension.NAME, keyUsage)
-                .addExtension(ExtendedKeyUsageExtension.NAME, extendedKeyUsage)
-                .buildAndSign(keyPair.getPrivate());
+        X500NameBuilder nameBuilder = new X500NameBuilder();
+        nameBuilder.addRDN(BCStyle.CN, "testing");
+        org.bouncycastle.asn1.x500.X500Name name = nameBuilder.build();
 
-        // Encode it to PEM format
+        ExtensionsGenerator extensionsGenerator = new ExtensionsGenerator();
+
+        extensionsGenerator.addExtension(
+                Extension.keyUsage, true, new KeyUsage(KeyUsage.digitalSignature));
+
+
+        extensionsGenerator.addExtension(
+                Extension.extendedKeyUsage,
+                true,
+                new ExtendedKeyUsage(
+                        new KeyPurposeId[] {
+                                KeyPurposeId.id_kp_clientAuth,
+                                KeyPurposeId.id_kp_serverAuth }
+                ));
+
+        GeneralNames subAtlNames = new GeneralNames(
+                new GeneralName[]{
+                        new GeneralName(GeneralName.dNSName, "test.com"),
+                        new GeneralName(GeneralName.iPAddress, "127.0.0.1"),
+                }
+        );
+        extensionsGenerator.addExtension(
+                Extension.subjectAlternativeName, true, subAtlNames);
+
+        ContentSigner signer = new JcaContentSignerBuilder("SHA256withRSA").build(keyPair.getPrivate());
+
+        PKCS10CertificationRequestBuilder csrBuilder = new JcaPKCS10CertificationRequestBuilder(name, keyPair.getPublic())
+                .addAttribute(PKCSObjectIdentifiers.pkcs_9_at_extensionRequest, extensionsGenerator.generate());
+        PKCS10CertificationRequest csr = csrBuilder.build(signer);
+
         ByteArrayOutputStream os = new ByteArrayOutputStream();
-        PrintStream ps = new PrintStream(os);
-        csr.print(ps);
+        PemWriter writer = new PemWriter(new OutputStreamWriter(os));
+        writer.writeObject(new JcaMiscPEMGenerator(csr));
+        writer.flush();
 
         X509Certificate certificate = client.sign(os.toByteArray());
         Assert.assertNotNull(certificate);
+
     }
 }

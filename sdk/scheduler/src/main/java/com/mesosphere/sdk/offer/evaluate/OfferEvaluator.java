@@ -13,6 +13,7 @@ import org.apache.mesos.Protos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.*;
 import java.util.function.Function;
@@ -275,6 +276,8 @@ public class OfferEvaluator {
             // TODO(mh): Improve error handling
             try {
                 evaluationStages.add(TLSEvaluationStage.fromEnvironmentForService(serviceName));
+            } catch (IOException e) {
+                e.printStackTrace();
             } catch (InvalidKeySpecException e) {
                 e.printStackTrace();
             }

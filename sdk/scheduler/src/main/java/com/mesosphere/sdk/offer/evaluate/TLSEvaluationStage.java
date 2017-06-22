@@ -6,7 +6,6 @@ import com.mesosphere.sdk.dcos.SecretsClient;
 import com.mesosphere.sdk.dcos.auth.CachedTokenProvider;
 import com.mesosphere.sdk.dcos.auth.ServiceAccountIAMTokenProvider;
 import com.mesosphere.sdk.dcos.auth.TokenProvider;
-import com.mesosphere.sdk.dcos.ca.CSRBuilder;
 import com.mesosphere.sdk.dcos.ca.DefaultCAClient;
 import com.mesosphere.sdk.dcos.http.HttpClientBuilder;
 import com.mesosphere.sdk.dcos.http.URLHelper;
@@ -15,20 +14,27 @@ import com.mesosphere.sdk.dcos.secrets.Secret;
 import com.mesosphere.sdk.dcos.secrets.SecretsException;
 import com.mesosphere.sdk.offer.MesosResourcePool;
 import com.mesosphere.sdk.scheduler.SchedulerFlags;
-import com.mesosphere.sdk.specification.SecretSpec;
 import org.apache.http.client.fluent.Executor;
 import org.apache.mesos.Protos;
-import sun.security.pkcs10.PKCS10;
-import sun.security.provider.X509Factory;
-import sun.security.util.ObjectIdentifier;
-import sun.security.x509.DNSName;
-import sun.security.x509.ExtendedKeyUsageExtension;
-import sun.security.x509.KeyUsageExtension;
-import sun.security.x509.X500Name;
+import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x500.X500NameBuilder;
+import org.bouncycastle.asn1.x500.style.BCStyle;
+import org.bouncycastle.asn1.x509.*;
+import org.bouncycastle.openssl.jcajce.JcaMiscPEMGenerator;
+import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.OperatorCreationException;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
+import org.bouncycastle.pkcs.PKCS10CertificationRequest;
+import org.bouncycastle.pkcs.PKCS10CertificationRequestBuilder;
+import org.bouncycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder;
+import org.bouncycastle.util.io.pem.PemReader;
+import org.bouncycastle.util.io.pem.PemWriter;
 
-import java.io.ByteArrayOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
-import java.io.PrintStream;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.security.*;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
@@ -52,7 +58,7 @@ public class TLSEvaluationStage implements OfferEvaluationStage {
         this.keyPairGenerator = keyPairGenerator;
     }
 
-    public static TLSEvaluationStage fromEnvironmentForService(String serviceName) throws InvalidKeySpecException {
+    public static TLSEvaluationStage fromEnvironmentForService(String serviceName) throws IOException, InvalidKeySpecException {
 
         SchedulerFlags flags = SchedulerFlags.fromEnv();
 
@@ -62,13 +68,10 @@ public class TLSEvaluationStage implements OfferEvaluationStage {
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
-        String privateKeyStr = flags.getServiceAccountPrivateKeyPEM()
-                .replaceAll("-----BEGIN (.* )?PRIVATE KEY-----\n", "")
-                .replaceAll("-----END (.* )?PRIVATE KEY-----\n?", "")
-                .replaceAll("\n", "");
-        byte[] privateKeyBytes  = Base64.getDecoder().decode(privateKeyStr);
-        PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(privateKeyBytes);
-        PrivateKey privateKey = keyFactory.generatePrivate(spec);
+
+        PemReader pemReader = new PemReader(new StringReader(flags.getServiceAccountPrivateKeyPEM()));
+        PrivateKey privateKey = keyFactory.generatePrivate(
+                new PKCS8EncodedKeySpec(pemReader.readPemObject().getContent()));
 
         ServiceAccountIAMTokenProvider serviceAccountIAMTokenProvider = new ServiceAccountIAMTokenProvider.Builder()
                 .setIamUrl(URLHelper.fromUnchecked(DcosConstants.IAM_AUTH_URL))
@@ -198,57 +201,67 @@ public class TLSEvaluationStage implements OfferEvaluationStage {
         return String.format("%s/%s/%s", serviceName, podInfoBuilder.getPodInstance().getName(), name);
     }
 
-    private String privateKeyToPem(PrivateKey privateKey) {
+    private String privateKeyToPem(PrivateKey privateKey) throws IOException {
 
-        StringBuilder sb = new StringBuilder();
+        StringWriter stringWriter = new StringWriter();
 
-        sb.append("-----BEGIN PRIVATE KEY-----\n");
-        Base64.getEncoder().encodeToString(privateKey.getEncoded());
-        sb.append("-----END PRIVATE KEY-----\n");
+        PemWriter pemWriter = new PemWriter(stringWriter);
+        pemWriter.writeObject(new JcaMiscPEMGenerator(privateKey));
+        pemWriter.flush();
 
-        return sb.toString();
-
-    }
-
-    private String certificateToPem(X509Certificate certificate) throws CertificateEncodingException {
-
-        StringBuilder sb = new StringBuilder();
-
-        sb.append(X509Factory.BEGIN_CERT + "\n");
-        sb.append(Base64.getEncoder().encodeToString(certificate.getEncoded()));
-        sb.append(X509Factory.END_CERT + "\n");
-
-        return sb.toString();
+        return stringWriter.toString();
 
     }
 
-    private byte[] generateCSR(KeyPair keyPair) throws IOException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+    private String certificateToPem(X509Certificate certificate) throws CertificateEncodingException, IOException {
 
-        KeyUsageExtension keyUsage = new KeyUsageExtension();
-        keyUsage.set(KeyUsageExtension.DIGITAL_SIGNATURE, true);
+        StringWriter stringWriter = new StringWriter();
 
-        int[] serverAuthOidData = new int[]{1, 3, 6, 1, 5, 5, 7, 3, 1};
-        int[] clientAuthOidData = new int[]{1, 3, 6, 1, 5, 5, 7, 3, 2};
-        Vector<ObjectIdentifier> extendedKeyUsages = new Vector<>(Arrays.asList(
-                new ObjectIdentifier(clientAuthOidData),
-                new ObjectIdentifier(serverAuthOidData)
-        ));
-        ExtendedKeyUsageExtension extendedKeyUsage = new ExtendedKeyUsageExtension(
-                extendedKeyUsages);
+        PemWriter pemWriter = new PemWriter(stringWriter);
+        pemWriter.writeObject(new JcaMiscPEMGenerator(certificate));
+        pemWriter.flush();
 
-        PKCS10 csr = new CSRBuilder(keyPair.getPublic())
-                .addSubject(new X500Name("CN=martin"))
-                .addSubjectAlternativeName(new DNSName("test.com"))
-                .addExtension(KeyUsageExtension.NAME, keyUsage)
-                .addExtension(ExtendedKeyUsageExtension.NAME, extendedKeyUsage)
-                .buildAndSign(keyPair.getPrivate());
+        return stringWriter.toString();
 
-        // Encode it to PEM format
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
-        PrintStream ps = new PrintStream(os);
-        csr.print(ps);
+    }
 
-        return os.toByteArray();
+    private byte[] generateCSR(KeyPair keyPair) throws IOException, OperatorCreationException {
+
+        X500NameBuilder nameBuilder = new X500NameBuilder();
+        nameBuilder.addRDN(BCStyle.CN, "testing");
+        X500Name name = nameBuilder.build();
+
+        ExtensionsGenerator extensionsGenerator = new ExtensionsGenerator();
+
+        extensionsGenerator.addExtension(
+                Extension.keyUsage, true, new KeyUsage(KeyUsage.digitalSignature));
+
+
+        extensionsGenerator.addExtension(
+                Extension.extendedKeyUsage,
+                true,
+                new ExtendedKeyUsage(
+                        new KeyPurposeId[] {
+                                KeyPurposeId.id_kp_clientAuth,
+                                KeyPurposeId.id_kp_serverAuth }
+                ));
+
+        GeneralNames subAtlNames = new GeneralNames(
+                new GeneralName[]{
+                        new GeneralName(GeneralName.dNSName, "test.com"),
+                        new GeneralName(GeneralName.iPAddress, "127.0.0.1"),
+                }
+        );
+        extensionsGenerator.addExtension(
+                Extension.subjectAlternativeName, true, subAtlNames);
+
+        ContentSigner signer = new JcaContentSignerBuilder("SHA256withRSA").build(keyPair.getPrivate());
+
+        PKCS10CertificationRequestBuilder csrBuilder = new JcaPKCS10CertificationRequestBuilder(name, keyPair.getPublic())
+                .addAttribute(PKCSObjectIdentifiers.pkcs_9_at_extensionRequest, extensionsGenerator.generate());
+        PKCS10CertificationRequest csr = csrBuilder.build(signer);
+
+        return csr.getEncoded();
 
     }
 }

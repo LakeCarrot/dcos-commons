@@ -32,6 +32,7 @@ ext {
     hibernateValidatorVer = "5.3.2.Final"
     elVer = "2.2.4"
     jwtVer = "3.2.0"
+    bouncyCastleVer = "1.57"
 }
 
 task sourceJar(type: Jar) {
@@ -104,6 +105,8 @@ dependencies {
     compile "org.glassfish.web:javax.el:${elVer}"
     compile 'com.mesosphere:mesos-http-adapter:0.4.1'
     compile "com.auth0:java-jwt:${jwtVer}"
+    compile "org.bouncycastle:bcprov-jdk15on:${bouncyCastleVer}"
+    compile "org.bouncycastle:bcpkix-jdk15on:${bouncyCastleVer}"
     testCompile "org.hamcrest:hamcrest-all:${hamcrestVer}" // note: must be above junit
     testCompile "junit:junit:${junitVer}"
     testCompile "com.github.stefanbirkner:system-rules:${systemRulesVer}"

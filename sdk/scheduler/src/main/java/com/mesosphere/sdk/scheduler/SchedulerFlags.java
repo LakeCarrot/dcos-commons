@@ -164,6 +164,7 @@ public class SchedulerFlags {
     }
 
     // TODO(mh): Add documentation about this JSON varaible being injected to scheduler runtime
+    // https://github.com/mesosphere/mesos-modules-private/blob/12e64db0e5e59f6695808b4400a10d5f6d86f36b/common/bouncer.cpp#L340
     private JSONObject getServiceAccountObject() {
         return new JSONObject(flagStore.getRequired(SIDECHANNEL_AUTH_ENV_NAME));
     }
