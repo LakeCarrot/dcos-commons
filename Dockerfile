@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y \
     wget \
     zip
 RUN pip install awscli
-RUN pip3 install dcoscli==0.4.16 dcos==0.4.16 dcos-shakedown
+RUN pip3 install dcoscli dcos-shakedown
 RUN wget https://downloads.dcos.io/dcos-test-utils/bin/linux/dcos-launch -O /usr/bin/dcos-launch
 RUN chmod +x /usr/bin/dcos-launch
 # shakedown and dcos-cli require this
